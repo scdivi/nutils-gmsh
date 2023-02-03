@@ -41,8 +41,10 @@ Line Loop(1) = {1,2,3,4};
 Plane Surface(1) = {1};
 ```
 
-Note that mesh size can be identicataed using the $h$ parameter.
-Now tag the boundaries as following:
+**Remark:** The order of point creation should be in anti-clockwise direction.
+This makes sure that the normal is always pointing towards outward direction.
+
+Note that mesh size can be identicataed using the $h$ parameter. Now tag the boundaries as following:
 
 ```
 Physical Line("bottom") = {1};
