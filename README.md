@@ -77,3 +77,6 @@ Run `python annulus.py main` to evaluate solution for $h=0.01$ (see figure below
 Run `python annulus.py convergence` to perform convergence study of $L^2$ and  $H^1$ error norms.
 For a first-order basis function this results in a 
 slope of $2$ and $1$ respectively (see figure below).
+
+![Alt text](https://github.com/scdivi/nutils-gmsh/blob/main/assets/annulus_convergence.png "Optional title")
+
