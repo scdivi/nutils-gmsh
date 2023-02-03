@@ -20,7 +20,7 @@
 import numpy, treelog
 from nutils import mesh, function, solver, export, cli
 from nutils.expression_v2 import Namespace
-from matplotlib import rc
+from matplotlib import collections, rc
 
 # set latex font and fontsize for plotting
 rc('text', usetex = True)
@@ -76,7 +76,7 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
     # post-process solution 
     bezier = domain.sample('bezier', 9)
     x, T   = bezier.eval(['x_i', 'T'] @ ps, lhs=lhs)
-    export.triplot('solution.png', x, T, tri=bezier.tri, hull=bezier.hull)
+    triplot(bezier, x, T, 'solution')
 
     # error
     ps.Texact = '( ( ln( 0.1 ) - 0.5 ln( x_0^2 + x_1^2 ) ) / ( ln( 0.1 ) - ln( 0.15 ) ) ) ( T2 - T1 ) + T1 '
@@ -85,7 +85,7 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
     # post-process absolute error
     bezier = domain.sample('bezier', 9)
     x, e   = bezier.eval(['x_i', 'err'] @ ps, lhs=lhs)
-    export.triplot('error.png', x, e, tri=bezier.tri, hull=bezier.hull)
+    triplot(bezier, x, e, 'error')
 
     # norm error
     L2err = domain.integral('( err )^2 dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
@@ -125,6 +125,16 @@ def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
         ax.legend(loc='lower left')
         ax.grid(which='both', axis='both', linestyle=":") 
         fig.set_tight_layout(True)
+
+def triplot(bezier, points, value, name):
+
+    with export.mplfigure(name+'.png', dpi=300) as fig:
+        ax  = fig.add_subplot(111, title=name)
+        im  = ax.tripcolor(points[:,0], points[:,1], bezier.tri, value, cmap='jet')
+        fig.colorbar(im)
+        ax.add_collection(collections.LineCollection(points[bezier.hull,:2], colors='k', linewidths=0.5, alpha=0.5))
+        ax.autoscale(enable=True, axis='both', tight=True)
+        ax.set_aspect('equal')
 
 # plot slope triangle
 def slope_triangle(fig, ax, x, y):
