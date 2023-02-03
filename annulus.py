@@ -113,7 +113,7 @@ def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
             L2err[icase], H1err[icase] = main(fname=fname, degree=degree ,k=k, T1=T1, T2=T2)
 
     # plot convergence
-    with export.mplfigure('convergence.png') as fig:
+    with export.mplfigure('convergence.png',dpi=300) as fig:
         ax = fig.add_subplot(111)
         ax.set_xlabel(r'1/h')
         ax.set_ylabel(r'error')
