@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # 
 # This is an example of using gmsh (with boundary tags) in nutils.
-# In this script we solve the Laplace equation :math:`- k ΔT &= 0` on a 
+# In this script we solve the Laplace equation :math:`- k ΔT = 0` on a 
 # annulus ring domain :math:`Ω` with Dirichlet boundary :math:`Γ`,
 # subject to boundary conditions:
 #
