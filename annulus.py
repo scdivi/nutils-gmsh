@@ -23,14 +23,17 @@ from nutils.expression_v2 import Namespace
 from matplotlib import collections
 
 # main
-def main(fname: str, degree: int, k: float, T1: float, T2: float):
+def main(level: str, degree: int, k: float, T1: float, T2: float):
     '''
     Laplace problem on a ring.
 
     .. arguments::
 
-       fname [meshfiles/annulus0.msh]
-         Name of gmsh file.
+       level [0]
+         Mesh refinement level; selects the corresponding annulus msh file.
+         Valid levels are 0, 1, 2, 3. If the level is prefixed with two dots
+         (e.g. ..3) then all levels up to that indicated are considered, and a
+         convergence plot is generated based on the series.
        degree [1]
          Polynomial degree.
        k [0.25]
@@ -41,8 +44,11 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
          Outer ring temperature (K).
     '''
 
+    if isinstance(level, str) and level.startswith('..'):
+        return convergence(int(level[2:]), degree, k, T1, T2)
+
     # construct mesh
-    domain, geom = mesh.gmsh(fname)
+    domain, geom = mesh.gmsh(f'meshfiles/annulus{level}.msh')
 
     # create namespace
     ps = Namespace()
@@ -91,7 +97,7 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
 
     return L2err, H1err
 
-def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
+def convergence(ncases, degree, k, T1, T2):
     
     # define mesh sizes 
     allh  = [0.01, 0.005, 0.0025, 0.00125]
@@ -104,9 +110,8 @@ def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
     # loop over number of cases
     with treelog.iter.fraction('mesh', range(ncases)) as counter:
         for icase in counter:
-            fname = 'meshfiles/annulus'+str(icase)+'.msh'
             # compute solution and errors
-            L2err[icase], H1err[icase] = main(fname=fname, degree=degree ,k=k, T1=T1, T2=T2)
+            L2err[icase], H1err[icase] = main(icase, degree=degree, k=k, T1=T1, T2=T2)
 
     # plot convergence
     with export.mplfigure('convergence.png',dpi=300) as fig:
@@ -162,4 +167,4 @@ def slope_triangle(fig, ax, x, y):
     slopefmt='{0:.1f}'
     ax.text(xval, yval, slopefmt.format(slope), horizontalalignment='center', verticalalignment='center', transform=shifttrans, fontsize=12)
 
-cli.choose(main,convergence)
+cli.run(main)
