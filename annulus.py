@@ -13,7 +13,7 @@
 # On the Dirichlet boundaries, the temperature is set to T1 
 # and T2, respectively. The exact solution is:
 #
-# .. math:: T_{\rm exact} = ( ( ln( 0.1 ) - 0.5 ln( x_0^2 + x_1^2 ) ) / ( ln( 0.1 ) - ln( 0.15 ) ) ) ( T_2 - T_1 ) + T_1.
+# .. math:: T_{\rm exact} = ((ln(0.1) - 0.5 ln(x_0^2 + x_1^2)) / (ln(0.1) - ln(0.15))) (T_2 - T_1) + T_1.
 #
 # We start by importing the necessary modules.
 
@@ -81,7 +81,7 @@ def main(level: str, degree: int, k: float, T1: float, T2: float):
     triplot(bezier, x, T, 'solution')
 
     # error
-    ps.Texact = '( ( ln( 0.1 ) - 0.5 ln( x_0^2 + x_1^2 ) ) / ( ln( 0.1 ) - ln( 0.15 ) ) ) ( T2 - T1 ) + T1 '
+    ps.Texact = '((ln(0.1) - 0.5 ln(x_0^2 + x_1^2)) / (ln(0.1) - ln(0.15))) (T2 - T1) + T1 '
     ps.err    = 'T - Texact'
     
     # post-process absolute error
@@ -90,8 +90,8 @@ def main(level: str, degree: int, k: float, T1: float, T2: float):
     triplot(bezier, x, e, 'error')
 
     # norm error
-    L2err = domain.integral('( err )^2 dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
-    H1err = domain.integral('( ( err )^2 + ∇_i(err) ∇_i(err)) dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
+    L2err = domain.integral('err^2 dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
+    H1err = domain.integral('(err^2 + ∇_i(err) ∇_i(err)) dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
     treelog.user('L2 error: {:.2e}'.format(L2err))
     treelog.user('H1 error: {:.2e}'.format(H1err))
 
