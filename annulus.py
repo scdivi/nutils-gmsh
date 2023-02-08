@@ -155,7 +155,7 @@ def slope_triangle(fig, ax, x, y):
     slope = delta(y[-2], y[-1], yscale) / delta(x[-2], x[-1], xscale)
     if slope in (numpy.nan, numpy.inf, -numpy.inf):
       treelog.warning(f'Cannot draw slope triangle with slope: {str(slope)}, drawing nothing')
-      return slope
+      return
 
     # handle positive and negative slopes correctly
     xtup, ytup = ((x[i], x[j], x[i]), (y[j], y[j], y[i]))
