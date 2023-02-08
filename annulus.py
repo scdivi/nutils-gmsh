@@ -20,11 +20,7 @@
 import numpy, treelog
 from nutils import mesh, function, solver, export, cli
 from nutils.expression_v2 import Namespace
-from matplotlib import collections, rc
-
-# set latex font and fontsize for plotting
-rc('text', usetex = True)
-rc('font', family = 'serif', size = 16)
+from matplotlib import collections
 
 # main
 def main(fname: str, degree: int, k: float, T1: float, T2: float):
@@ -118,8 +114,8 @@ def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
         ax.set_xlabel(r'1/h')
         ax.set_ylabel(r'error')
         # plot computed errors
-        ax.loglog(1/h, L2err, 'bo-', label=r'L$^2$-norm')
-        ax.loglog(1/h, H1err, 'ro-', label=r'H$^1$-norm')
+        ax.loglog(1/h, L2err, 'bo-', label='L²-norm')
+        ax.loglog(1/h, H1err, 'ro-', label='H¹-norm')
         slope_triangle(fig, ax, 1/h, L2err)
         slope_triangle(fig, ax, 1/h, H1err)
         ax.legend(loc='lower left')
