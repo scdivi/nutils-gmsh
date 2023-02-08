@@ -13,28 +13,27 @@
 # On the Dirichlet boundaries, the temperature is set to T1 
 # and T2, respectively. The exact solution is:
 #
-# .. math:: T_{\rm exact} = ( ( ln( 0.1 ) - 0.5 ln( x_0^2 + x_1^2 ) ) / ( ln( 0.1 ) - ln( 0.15 ) ) ) ( T_2 - T_1 ) + T_1.
+# .. math:: T_{\rm exact} = ((ln(0.1) - 0.5 ln(x_0^2 + x_1^2)) / (ln(0.1) - ln(0.15))) (T_2 - T_1) + T_1.
 #
 # We start by importing the necessary modules.
 
 import numpy, treelog
 from nutils import mesh, function, solver, export, cli
 from nutils.expression_v2 import Namespace
-from matplotlib import collections, rc
-
-# set latex font and fontsize for plotting
-rc('text', usetex = True)
-rc('font', family = 'serif', size = 16)
+from matplotlib import collections
 
 # main
-def main(fname: str, degree: int, k: float, T1: float, T2: float):
+def main(level: str, degree: int, k: float, T1: float, T2: float):
     '''
     Laplace problem on a ring.
 
     .. arguments::
 
-       fname [meshfiles/annulus0.msh]
-         Name of gmsh file.
+       level [0]
+         Mesh refinement level; selects the corresponding annulus msh file.
+         Valid levels are 0, 1, 2, 3. If the level is prefixed with two dots
+         (e.g. ..3) then all levels up to that indicated are considered, and a
+         convergence plot is generated based on the series.
        degree [1]
          Polynomial degree.
        k [0.25]
@@ -45,8 +44,11 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
          Outer ring temperature (K).
     '''
 
+    if isinstance(level, str) and level.startswith('..'):
+        return convergence(int(level[2:]), degree, k, T1, T2)
+
     # construct mesh
-    domain, geom = mesh.gmsh(fname)
+    domain, geom = mesh.gmsh(f'meshfiles/annulus{level}.msh')
 
     # create namespace
     ps = Namespace()
@@ -79,7 +81,7 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
     triplot(bezier, x, T, 'solution')
 
     # error
-    ps.Texact = '( ( ln( 0.1 ) - 0.5 ln( x_0^2 + x_1^2 ) ) / ( ln( 0.1 ) - ln( 0.15 ) ) ) ( T2 - T1 ) + T1 '
+    ps.Texact = '((ln(0.1) - 0.5 ln(x_0^2 + x_1^2)) / (ln(0.1) - ln(0.15))) (T2 - T1) + T1 '
     ps.err    = 'T - Texact'
     
     # post-process absolute error
@@ -88,14 +90,14 @@ def main(fname: str, degree: int, k: float, T1: float, T2: float):
     triplot(bezier, x, e, 'error')
 
     # norm error
-    L2err = domain.integral('( err )^2 dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
-    H1err = domain.integral('( ( err )^2 + ∇_i(err) ∇_i(err)) dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
+    L2err = domain.integral('err^2 dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
+    H1err = domain.integral('(err^2 + ∇_i(err) ∇_i(err)) dV' @ ps, degree=degree*2).eval(lhs=lhs)**.5
     treelog.user('L2 error: {:.2e}'.format(L2err))
     treelog.user('H1 error: {:.2e}'.format(H1err))
 
     return L2err, H1err
 
-def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
+def convergence(ncases, degree, k, T1, T2):
     
     # define mesh sizes 
     allh  = [0.01, 0.005, 0.0025, 0.00125]
@@ -108,9 +110,8 @@ def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
     # loop over number of cases
     with treelog.iter.fraction('mesh', range(ncases)) as counter:
         for icase in counter:
-            fname = 'meshfiles/annulus'+str(icase)+'.msh'
             # compute solution and errors
-            L2err[icase], H1err[icase] = main(fname=fname, degree=degree ,k=k, T1=T1, T2=T2)
+            L2err[icase], H1err[icase] = main(icase, degree=degree, k=k, T1=T1, T2=T2)
 
     # plot convergence
     with export.mplfigure('convergence.png',dpi=300) as fig:
@@ -118,8 +119,8 @@ def convergence(ncases=4, degree=1, k=0.25, T1=70, T2=20):
         ax.set_xlabel(r'1/h')
         ax.set_ylabel(r'error')
         # plot computed errors
-        ax.loglog(1/h, L2err, 'bo-', label=r'L$^2$-norm')
-        ax.loglog(1/h, H1err, 'ro-', label=r'H$^1$-norm')
+        ax.loglog(1/h, L2err, 'bo-', label='L²-norm')
+        ax.loglog(1/h, H1err, 'ro-', label='H¹-norm')
         slope_triangle(fig, ax, 1/h, L2err)
         slope_triangle(fig, ax, 1/h, H1err)
         ax.legend(loc='lower left')
@@ -154,7 +155,7 @@ def slope_triangle(fig, ax, x, y):
     slope = delta(y[-2], y[-1], yscale) / delta(x[-2], x[-1], xscale)
     if slope in (numpy.nan, numpy.inf, -numpy.inf):
       treelog.warning(f'Cannot draw slope triangle with slope: {str(slope)}, drawing nothing')
-      return slope
+      return
 
     # handle positive and negative slopes correctly
     xtup, ytup = ((x[i], x[j], x[i]), (y[j], y[j], y[i]))
@@ -166,4 +167,4 @@ def slope_triangle(fig, ax, x, y):
     slopefmt='{0:.1f}'
     ax.text(xval, yval, slopefmt.format(slope), horizontalalignment='center', verticalalignment='center', transform=shifttrans, fontsize=12)
 
-cli.choose(main,convergence)
+cli.run(main)
